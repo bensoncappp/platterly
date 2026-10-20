@@ -1,4 +1,4 @@
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase-server";
 import { deleteMealIfOrphan } from "@/lib/mealCleanup";
 import { NextResponse } from "next/server";
 
@@ -10,6 +10,7 @@ export async function PATCH(
 ) {
   const { id } = await params;
   const body = await req.json();
+  const supabase = await createClient();
 
   // Save / unsave
   if (typeof body.saved === "boolean") {
@@ -24,11 +25,14 @@ export async function PATCH(
     }
     // 0 rows updated = the meal no longer exists (e.g. it was removed from another page)
     if (!data || data.length === 0) {
-      return NextResponse.json({ error: "Meal not found", gone: true }, { status: 404 });
+      return NextResponse.json(
+        { error: "Meal not found", gone: true },
+        { status: 404 },
+      );
     }
 
     // Unsaving a meal that isn't on any board leaves nothing pointing at it -> clean it up.
-    const deleted = body.saved ? false : await deleteMealIfOrphan(id);
+    const deleted = body.saved ? false : await deleteMealIfOrphan(supabase, id);
     return NextResponse.json({ success: true, saved: body.saved, deleted });
   }
 
