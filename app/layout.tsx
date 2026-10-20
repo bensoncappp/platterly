@@ -15,8 +15,8 @@ const lobster = Lobster({
 });
 
 export const metadata: Metadata = {
-  title: "Meal Prep Generator",
-  description: "Generate meal plans to hit your calorie and macro targets.",
+  title: "Platterly | Meal prep, made simple",
+  description: "Meal prep, made simple. Describe what you crave and get meals that hit your calorie and macro targets.",
 };
 
 export default function RootLayout({
