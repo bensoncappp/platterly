@@ -21,6 +21,7 @@ Rules:
 - If a sauce, dressing, or oil is used, include it as its own ingredient with realistic quantities and its own macros.
 - For each food, estimate a realistic portion size in grams and its calories, protein, fat, and carbs for that portion, based on typical nutritional values. Keep each food's calories consistent with its macros (about 4 per gram of protein, 4 per gram of carbs, 9 per gram of fat).
 - The sum of the foods should roughly hit the calorie and macro target given.
+- "instructions": 4 to 7 numbered cooking steps for that exact meal, written as plain strings. Each step starts with a short action label, a colon, then 1 to 3 sentences (e.g. "Cook the Rice: Rinse 1 cup of rice, then simmer covered on low heat for 15 to 18 minutes until the water is absorbed."). Give heat level, a time range and a doneness cue (colour, texture) wherever it applies, and use the ingredient names and quantities from "items". The LAST step must be "Assemble: ..." describing how to plate the meal. Do not number the steps inside the strings.
 - Return ONLY valid JSON, no other text, in this exact shape:
 {
   "meals": [
@@ -29,7 +30,8 @@ Rules:
       "cuisine": "Japanese",
       "items": [
         { "food": "ingredient name", "grams": 000, "calories": 000, "protein": 00, "fat": 00, "carbs": 00 }
-      ]
+      ],
+      "instructions": ["Cook the Rice: ...", "Assemble: ..."]
     }
   ]
 }`;
@@ -218,8 +220,15 @@ export async function POST(req: Request) {
       }),
       { calories: 0, protein: 0, fat: 0, carbs: 0 },
     );
+    // Keep only real, non-empty strings, so a badly-shaped answer from the AI can't break the UI.
+    const instructions = Array.isArray(meal.instructions)
+      ? meal.instructions.filter(
+          (s: unknown) => typeof s === "string" && s.trim() !== "",
+        )
+      : [];
     return {
       ...meal,
+      instructions,
       totals,
       imageUrl: IMAGES_ENABLED
         ? buildImageUrl(buildImagePrompt(meal.items))

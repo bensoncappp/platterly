@@ -20,6 +20,7 @@ export type HomeMeal = {
   }[];
   totals: { calories: number; protein: number; fat: number; carbs: number };
   imageUrl?: string | null;
+  instructions?: string[];
 };
 
 // Per-card state that would otherwise be lost when the card unmounts.

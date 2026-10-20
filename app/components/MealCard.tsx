@@ -24,6 +24,7 @@ type Meal = {
   items: Ingredient[];
   totals: { calories: number; protein: number; fat: number; carbs: number };
   imageUrl?: string | null;
+  instructions?: string[];
 };
 type Board = { id: string; name: string };
 
@@ -115,6 +116,7 @@ export default function MealCard({
           ingredients: meal.items, // the adjusted ingredients, if the user changed the macros
           totals: meal.totals,
           imageUrl: meal.imageUrl ?? null,
+          instructions: meal.instructions ?? [],
           saved: asSaved,
         }),
       });
