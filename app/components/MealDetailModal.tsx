@@ -92,7 +92,13 @@ export default function MealDetailModal({
             ) : (
               <div className={styles.placeholder} />
             )}
+          </div>
+        </div>
 
+        {/* Right of the modal (outside it): the macro pie and the Save / Add to board buttons,
+            so the image inside the modal can be as big as possible. */}
+        {(showPie || onSave || onAddToBoard) && (
+          <div className={styles.side}>
             {showPie && (
               <section className={styles.tune}>
                 <div className={styles.tuneHeader}>
@@ -123,53 +129,53 @@ export default function MealDetailModal({
                 ) : null}
               </section>
             )}
-          </div>
-        </div>
 
-        {(onSave || onAddToBoard) && (
-          <div className={styles.actions}>
-            {onSave && (
-              <button
-                className={styles.actionButton}
-                onClick={onSave}
-                disabled={saving}
-                aria-label={saved ? "Remove from saved meals" : "Save meal"}
-              >
-                <svg
-                  width="30"
-                  height="30"
-                  viewBox="0 0 24 24"
-                  fill={saved ? "currentColor" : "none"}
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinejoin="round"
-                >
-                  <path d="M6 3h12v18l-6-4-6 4z" />
-                </svg>
-                <span>{saved ? "Saved" : "Save"}</span>
-              </button>
-            )}
-            {onAddToBoard && (
-              <button
-                className={styles.actionButton}
-                onClick={onAddToBoard}
-                disabled={saving}
-                aria-label="Add to board"
-              >
-                <svg
-                  width="30"
-                  height="30"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                >
-                  <rect x="4" y="4" width="16" height="16" rx="3" />
-                  <path d="M12 9v6M9 12h6" />
-                </svg>
-                <span>Add to board</span>
-              </button>
+            {(onSave || onAddToBoard) && (
+              <div className={styles.actions}>
+                {onSave && (
+                  <button
+                    className={styles.actionButton}
+                    onClick={onSave}
+                    disabled={saving}
+                    aria-label={saved ? "Remove from saved meals" : "Save meal"}
+                  >
+                    <svg
+                      width="30"
+                      height="30"
+                      viewBox="0 0 24 24"
+                      fill={saved ? "currentColor" : "none"}
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M6 3h12v18l-6-4-6 4z" />
+                    </svg>
+                    <span>{saved ? "Saved" : "Save"}</span>
+                  </button>
+                )}
+                {onAddToBoard && (
+                  <button
+                    className={styles.actionButton}
+                    onClick={onAddToBoard}
+                    disabled={saving}
+                    aria-label="Add to board"
+                  >
+                    <svg
+                      width="30"
+                      height="30"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                    >
+                      <rect x="4" y="4" width="16" height="16" rx="3" />
+                      <path d="M12 9v6M9 12h6" />
+                    </svg>
+                    <span>Add to board</span>
+                  </button>
+                )}
+              </div>
             )}
           </div>
         )}
