@@ -2,8 +2,8 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import styles from "./MealCard.module.css";
-import { TEMP_USER_ID } from "@/lib/constants";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase-browser";
+import { signInWithGoogle } from "@/lib/auth";
 import { rebalance, splitOfItems } from "@/lib/rebalance";
 import type { Split } from "@/lib/macros";
 import type { CardState } from "@/lib/homeCache";
@@ -39,6 +39,7 @@ export default function MealCard({
   // `mealId` = this meal's row in the database. It exists once the meal has been saved OR put on a board.
   // `saved`  = whether it's in the Saved Meals list. The two are independent: a meal can sit on a
   //            board without ever being saved, and saving doesn't put it on a board.
+  const supabase = useMemo(() => createClient(), []);
   const [mealId, setMealId] = useState<string | null>(initial?.mealId ?? null);
   const [saved, setSaved] = useState(initial?.saved ?? false);
   const idRef = useRef<string | null>(initial?.mealId ?? null); // always-current copy of mealId
@@ -53,7 +54,10 @@ export default function MealCard({
 
   // The macro pie lives here (not in the modal) so the card, the modal and the saved copy all see
   // the SAME adjusted meal. `split` is null until the user touches the pie = the AI's original meal.
-  const baseSplit = useMemo(() => splitOfItems(original.items), [original.items]);
+  const baseSplit = useMemo(
+    () => splitOfItems(original.items),
+    [original.items],
+  );
   const [split, setSplit] = useState<Split | null>(initial?.split ?? null);
   const [resetKey, setResetKey] = useState(0); // remounts the pie on reset so its rotation resets too
 
@@ -85,6 +89,16 @@ export default function MealCard({
     setSaved(false);
   }
 
+  // Saving and boards belong to a user. If nobody is signed in, offer to sign in instead of failing.
+  async function requireUser(): Promise<boolean> {
+    const { data } = await supabase.auth.getUser();
+    if (data.user) return true;
+    if (window.confirm("Sign in with Google to save meals and use boards?")) {
+      await signInWithGoogle(supabase);
+    }
+    return false;
+  }
+
   // Makes sure the meal exists in the database and returns its id.
   // `asSaved` only matters when it has to be created: Save creates it as saved,
   // Add to board creates it as NOT saved (it only lives on the board).
@@ -97,7 +111,6 @@ export default function MealCard({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          userId: TEMP_USER_ID,
           name: meal.name ?? null,
           ingredients: meal.items, // the adjusted ingredients, if the user changed the macros
           totals: meal.totals,
@@ -123,6 +136,7 @@ export default function MealCard({
   async function handleSave(e?: React.MouseEvent) {
     e?.stopPropagation(); // don't also trigger the card's expand click
     if (busy) return;
+    if (!(await requireUser())) return;
     setBusy(true);
     try {
       if (!idRef.current) {
@@ -156,12 +170,13 @@ export default function MealCard({
   async function handleAddToBoard(e?: React.MouseEvent) {
     e?.stopPropagation();
     if (busy) return;
+    if (!(await requireUser())) return;
     setBusy(true);
     try {
+      // RLS (next step) makes this return only the signed-in user's boards.
       const { data: boards } = await supabase
         .from("boards")
         .select("id, name")
-        .eq("user_id", TEMP_USER_ID)
         .order("created_at", { ascending: false });
 
       let memberOf: string[] = [];

@@ -165,3 +165,48 @@ export function applyMealChange(
   }
   persist();
 }
+
+// The Home cache belongs to whoever was using the tab. When the person changes, it has to go.
+//  - signed in -> signed out, or user A -> user B: wipe EVERYTHING (results, cards, sliders). Fresh start.
+//  - signed out -> signed in (e.g. you generated meals, then logged in to save them): keep the results,
+//    but clear any stale "Saved" marks on the cards.
+// Returns true if something changed, so the caller knows to reload the page.
+const OWNER_KEY = "prep:home:owner";
+export function syncCacheOwner(userId: string | null): boolean {
+  if (typeof window === "undefined") return false;
+  const current = userId ?? "anon";
+  let previous: string | null = null;
+  try {
+    previous = window.sessionStorage.getItem(OWNER_KEY);
+    window.sessionStorage.setItem(OWNER_KEY, current);
+  } catch {
+    // storage blocked -> treat as unchanged
+    return false;
+  }
+  if (previous === current) return false;
+
+  loadFromSession();
+
+  // A signed-in person is being replaced by someone else (or by nobody): throw everything away.
+  if (previous !== null && previous !== "anon") {
+    entries.clear();
+    lastKey = null;
+    controls = null;
+    persist();
+    return true;
+  }
+
+  // Otherwise (first visit, or signed out -> signed in): keep the results, clear the marks.
+  let changed = false;
+  for (const entry of entries.values()) {
+    for (const card of Object.values(entry.cards)) {
+      if (card.mealId || card.saved) {
+        card.mealId = null;
+        card.saved = false;
+        changed = true;
+      }
+    }
+  }
+  if (changed) persist();
+  return changed;
+}

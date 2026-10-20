@@ -1,7 +1,11 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import type { User } from "@supabase/supabase-js";
+import { createClient } from "@/lib/supabase-browser";
+import { signInWithGoogle } from "@/lib/auth";
+import { syncCacheOwner } from "@/lib/homeCache";
 import styles from "./TopBar.module.css";
 
 // Placeholder text per page, matching the design.
@@ -12,13 +16,45 @@ const PLACEHOLDERS: Record<string, string> = {
 };
 
 export default function TopBar() {
-  // Placeholder state — swap for real session data once Google OAuth is wired up.
-  const [isSignedIn, setIsSignedIn] = useState(false);
+  // The signed-in user (null = signed out). Comes from Supabase Auth, which keeps the session in cookies.
+  const supabase = useMemo(() => createClient(), []);
+  const [user, setUser] = useState<User | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [text, setText] = useState("");
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
+  // Load the current user once, then stay in sync when they sign in or out.
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      setUser(data.user);
+      // New person since the Home cache was made? Clear the old "Saved" marks and reload once.
+      if (syncCacheOwner(data.user?.id ?? null)) window.location.reload();
+    });
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+    return () => sub.subscription.unsubscribe();
+  }, [supabase]);
+
+  // Sends you to Google, then back to /auth/callback, which finishes the login and returns you to this page.
+  function signIn() {
+    return signInWithGoogle(supabase);
+  }
+
+  async function signOut() {
+    setMenuOpen(false);
+    await supabase.auth.signOut();
+    // Home's cached cards may say "Saved" for the user who just left: clear that, then reload.
+    if (syncCacheOwner(null)) window.location.reload();
+    else router.refresh(); // re-fetch the server pages so they stop showing this user's data
+  }
+
+  // First letter of the user's Google name (or email) for the avatar circle.
+  const initial = (user?.user_metadata?.full_name ?? user?.email ?? "?")
+    .charAt(0)
+    .toUpperCase();
+
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // When you move to another page, show that page's search (empty if none),
@@ -80,14 +116,14 @@ export default function TopBar() {
       </form>
 
       <div className={styles.authArea}>
-        {isSignedIn ? (
+        {user ? (
           <div className={styles.profileWrap}>
             <button
               className={styles.profileButton}
               onClick={() => setMenuOpen((o) => !o)}
               aria-label="Account menu"
             >
-              <span className={styles.avatar}>B</span>
+              <span className={styles.avatar}>{initial}</span>
               <svg
                 width="16"
                 height="16"
@@ -103,23 +139,14 @@ export default function TopBar() {
             </button>
             {menuOpen && (
               <div className={styles.dropdown}>
-                <button
-                  className={styles.dropdownItem}
-                  onClick={() => {
-                    setIsSignedIn(false);
-                    setMenuOpen(false);
-                  }}
-                >
+                <button className={styles.dropdownItem} onClick={signOut}>
                   Sign out
                 </button>
               </div>
             )}
           </div>
         ) : (
-          <button
-            className={styles.signInButton}
-            onClick={() => setIsSignedIn(true)}
-          >
+          <button className={styles.signInButton} onClick={signIn}>
             Sign in
           </button>
         )}
