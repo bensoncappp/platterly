@@ -52,7 +52,8 @@ async function saveImageToStorage(
 export async function POST(req: Request) {
   // `saved` decides whether the meal shows up in Saved Meals. A meal can also be created just so it
   // can sit on a board (saved: false). Left out = saved, so older callers keep working.
-  const { name, ingredients, totals, imageUrl, saved } = await req.json();
+  const { name, ingredients, totals, imageUrl, saved, instructions } =
+    await req.json();
   const supabase = await createClient();
 
   // Who is asking comes from the login cookies, never from the request body.
@@ -81,6 +82,8 @@ export async function POST(req: Request) {
       fat: totals.fat,
       carbs: totals.carbs,
       image_url: storedImageUrl,
+      // jsonb column holding the cooking steps as an array of strings (empty if none were generated)
+      instructions: Array.isArray(instructions) ? instructions : [],
       is_saved: saved !== false,
     })
     .select()

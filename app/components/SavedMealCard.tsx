@@ -19,6 +19,7 @@ type Meal = {
   fat: number;
   carbs: number;
   image_url: string | null;
+  instructions?: string[] | null;
   meal_items: MealItem[];
   board_meals?: { board_id: string }[];
 };
@@ -205,6 +206,7 @@ export default function SavedMealCard({
               carbs: meal.carbs,
             },
             imageUrl: meal.image_url,
+            instructions: meal.instructions ?? [],
           }}
           onClose={() => setExpanded(false)}
         />
