@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase-server";
 import { sumMacros } from "@/lib/totals";
 import SavedMealCard from "../../components/SavedMealCard";
 import DeleteBoardButton from "../../components/DeleteBoardButton";
@@ -13,6 +13,7 @@ export default async function BoardDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
+  const supabase = await createClient();
 
   const { data, error } = await supabase
     .from("boards")

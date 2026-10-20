@@ -23,7 +23,7 @@
   background: #e6e0d2;
   border-radius: 28px;
   padding: 36px;
-  width: min(860px, 80vw);
+  width: min(920px, 80vw);
   max-height: 90vh;
   overflow-y: auto;
 }
@@ -85,13 +85,10 @@
   text-transform: capitalize;
 }
 
-/* right column: image on top, macro pie underneath */
+/* the image is the main product, so it gets the wide column */
 .imageBox {
-  flex: 0 0 320px;
+  flex: 0 0 440px;
   align-self: flex-start;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
 }
 .image,
 .placeholder {
@@ -146,12 +143,22 @@
   color: var(--color-text-muted);
 }
 
-/* Save + Add to board, stacked beside the modal */
-.actions {
+/* column to the right of the modal: macro pie on top, Save / Add to board under it */
+.side {
+  width: 300px;
+  flex-shrink: 0;
   display: flex;
   flex-direction: column;
-  gap: 22px;
-  padding-top: 24px;
+  gap: 24px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+/* Save + Add to board, side by side under the pie */
+.actions {
+  display: flex;
+  gap: 28px;
+  padding-left: 6px;
 }
 .actionButton {
   display: flex;
@@ -168,6 +175,23 @@
 .actionButton:disabled {
   cursor: default;
   opacity: 0.6;
+}
+
+/* not enough room beside the modal: the side column drops underneath it */
+@media (max-width: 1300px) {
+  .overlay {
+    align-items: flex-start;
+    overflow-y: auto;
+  }
+  .wrap {
+    flex-direction: column;
+    align-items: center;
+    max-height: none;
+  }
+  .side {
+    width: min(920px, 80vw);
+    max-height: none;
+  }
 }
 
 @media (max-width: 800px) {

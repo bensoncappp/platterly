@@ -1,7 +1,10 @@
-import { supabase } from "@/lib/supabase";
-import { TEMP_USER_ID } from "@/lib/constants";
+import { createClient } from "@/lib/supabase-server";
 import SavedMealCard from "../components/SavedMealCard";
-import SortBar, { SORTS, type SortKey, type SortDir } from "../components/SortBar";
+import SortBar, {
+  SORTS,
+  type SortKey,
+  type SortDir,
+} from "../components/SortBar";
 import styles from "../page.module.css";
 import boardStyles from "../components/Boards.module.css";
 
@@ -16,11 +19,25 @@ export default async function SavedMealsPage({ searchParams }: Props) {
   const sort = SORTS.find((s) => s.key === params.sort)?.key ?? null;
   const dir: SortDir = params.dir === "asc" ? "asc" : "desc";
 
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return (
+      <div>
+        <h1 className={boardStyles.pageTitle}>Saved Meals</h1>
+        <p>Sign in (top right) to see your saved meals.</p>
+      </div>
+    );
+  }
+
   // Only meals the user actually saved. Meals that exist just because they sit on a board are not listed here.
   const { data: meals, error } = await supabase
     .from("meals")
     .select("*, meal_items(*), board_meals(board_id)")
-    .eq("user_id", TEMP_USER_ID)
+    .eq("user_id", user.id)
     .eq("is_saved", true)
     .order("created_at", { ascending: false });
 
@@ -28,7 +45,7 @@ export default async function SavedMealsPage({ searchParams }: Props) {
   const { data: boards } = await supabase
     .from("boards")
     .select("id, name")
-    .eq("user_id", TEMP_USER_ID)
+    .eq("user_id", user.id)
     .order("created_at", { ascending: false });
 
   if (error) {

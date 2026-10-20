@@ -1,4 +1,4 @@
-import { supabase } from "@/lib/supabase";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 // The image's file name inside the meal-images bucket, taken from its public URL.
 function storageFileName(url: string | null) {
@@ -11,7 +11,11 @@ function storageFileName(url: string | null) {
 // A meal row only needs to exist while it's saved OR on at least one board.
 // Once it's neither, nothing can reach it any more, so delete it (ingredients, stored image, row).
 // Returns true if the meal is gone afterwards.
-export async function deleteMealIfOrphan(mealId: string): Promise<boolean> {
+// It uses the caller's Supabase client, so it acts as the signed-in user (and respects RLS).
+export async function deleteMealIfOrphan(
+  supabase: SupabaseClient,
+  mealId: string,
+): Promise<boolean> {
   const { data: meal } = await supabase
     .from("meals")
     .select("id, is_saved, image_url")

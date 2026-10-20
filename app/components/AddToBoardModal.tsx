@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { TEMP_USER_ID } from "@/lib/constants";
 import styles from "./AddToBoardModal.module.css";
 
 type Board = { id: string; name: string };
@@ -67,7 +66,7 @@ export default function AddToBoardModal({
     const res = await fetch("/api/boards", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ userId: TEMP_USER_ID, name: newName }),
+      body: JSON.stringify({ name: newName }),
     });
 
     if (!res.ok) {
@@ -104,7 +103,9 @@ export default function AddToBoardModal({
         <div className={styles.list}>
           {visible.length === 0 && (
             <p className={styles.empty}>
-              {boards.length === 0 ? "No boards yet — create one below." : "No boards match."}
+              {boards.length === 0
+                ? "No boards yet — create one below."
+                : "No boards match."}
             </p>
           )}
           {visible.map((b) => (
@@ -147,7 +148,10 @@ export default function AddToBoardModal({
               </button>
             </div>
           ) : (
-            <button className={styles.createRow} onClick={() => setCreating(true)}>
+            <button
+              className={styles.createRow}
+              onClick={() => setCreating(true)}
+            >
               <span className={styles.plus}>+</span>
               Create board
             </button>

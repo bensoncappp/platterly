@@ -41,9 +41,26 @@
   background: var(--color-surface);
   overflow: hidden;
   display: grid;
+  gap: 3px;
+  transition: box-shadow 0.15s ease;
+}
+/* The layout depends on how many meal photos the board has:
+   1 = one big photo, 2 = side by side,
+   3+ = first photo on the left, the next two stacked on the right. */
+.collage1 {
+  grid-template-columns: 1fr;
+  grid-template-rows: 1fr;
+}
+.collage2 {
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr;
+}
+.collage3 {
   grid-template-columns: 1fr 1fr;
   grid-template-rows: 1fr 1fr;
-  transition: box-shadow 0.15s ease;
+}
+.collage3 .boardThumb:first-child {
+  grid-row: 1 / span 2;
 }
 .boardLink:hover .boardCard {
   box-shadow: 0 6px 18px rgba(34, 58, 45, 0.15);
@@ -51,6 +68,7 @@
 .boardThumb {
   width: 100%;
   height: 100%;
+  min-height: 0;
   object-fit: cover;
 }
 .boardMeta {

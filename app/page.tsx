@@ -7,7 +7,7 @@ import CalorieSlider from "./components/CalorieSlider";
 import MacroPie from "./components/MacroPie";
 import CuisineChips from "./components/CuisineChips";
 import { canonicalCuisine } from "@/lib/cuisines";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase-browser";
 import {
   createEntry,
   getControls,
@@ -118,6 +118,7 @@ function HomeInner() {
   // whose meal is gone or whose saved flag has changed — otherwise it would say "Saved" for
   // something that no longer exists.
   async function reconcile(hit: HomeEntry) {
+    const supabase = createClient();
     const cards = Object.values(hit.cards);
     const ids = cards.map((c) => c.mealId).filter(Boolean) as string[];
     if (ids.length === 0) return;

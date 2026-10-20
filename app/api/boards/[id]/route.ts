@@ -1,4 +1,4 @@
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase-server";
 import { deleteMealIfOrphan } from "@/lib/mealCleanup";
 import { NextResponse } from "next/server";
 
@@ -9,6 +9,7 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
+  const supabase = await createClient();
 
   const { data: links } = await supabase
     .from("board_meals")
@@ -23,7 +24,7 @@ export async function DELETE(
   }
 
   for (const link of links ?? []) {
-    await deleteMealIfOrphan(link.meal_id);
+    await deleteMealIfOrphan(supabase, link.meal_id);
   }
 
   return NextResponse.json({ success: true });

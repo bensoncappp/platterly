@@ -1,6 +1,5 @@
 import Link from "next/link";
-import { supabase } from "@/lib/supabase";
-import { TEMP_USER_ID } from "@/lib/constants";
+import { createClient } from "@/lib/supabase-server";
 import { sumMacros } from "@/lib/totals";
 import styles from "../components/Boards.module.css";
 
@@ -10,13 +9,27 @@ type Props = { searchParams: Promise<{ q?: string }> };
 export default async function BoardsPage({ searchParams }: Props) {
   const q = ((await searchParams).q ?? "").trim().toLowerCase();
 
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return (
+      <div>
+        <h1 className={styles.pageTitle}>Your Saved Boards</h1>
+        <p>Sign in (top right) to see your boards.</p>
+      </div>
+    );
+  }
+
   // Each board with the macros of every meal linked to it through board_meals.
   const { data: boards, error } = await supabase
     .from("boards")
     .select(
       "id, name, board_meals(meals(calories, protein, fat, carbs, image_url))",
     )
-    .eq("user_id", TEMP_USER_ID)
+    .eq("user_id", user.id)
     .order("created_at", { ascending: false });
 
   if (error) {
@@ -51,7 +64,7 @@ export default async function BoardsPage({ searchParams }: Props) {
             const thumbs = meals
               .map((m: any) => m.image_url)
               .filter(Boolean)
-              .slice(0, 4);
+              .slice(0, 3); // the collage uses at most 3 photos
 
             return (
               <Link
@@ -59,9 +72,16 @@ export default async function BoardsPage({ searchParams }: Props) {
                 href={`/boards/${board.id}`}
                 className={styles.boardLink}
               >
-                <div className={styles.boardCard}>
+                <div
+                  className={`${styles.boardCard} ${styles[`collage${thumbs.length}`] ?? ""}`}
+                >
                   {thumbs.map((src: string, i: number) => (
-                    <img key={i} src={src} alt="" className={styles.boardThumb} />
+                    <img
+                      key={i}
+                      src={src}
+                      alt=""
+                      className={styles.boardThumb}
+                    />
                   ))}
                 </div>
                 <div className={styles.boardMeta}>
