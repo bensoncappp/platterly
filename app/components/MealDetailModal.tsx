@@ -1,3 +1,4 @@
+import { useState } from "react";
 import MacroPie from "./MacroPie";
 import type { Split } from "@/lib/macros";
 import styles from "./MealDetailModal.module.css";
@@ -13,7 +14,17 @@ type Meal = {
   items: Ingredient[];
   totals: { calories: number; protein: number; fat: number; carbs: number };
   imageUrl?: string | null;
+  instructions?: string[];
 };
+
+// "Cook the Rice: Simmer..." -> the part before the first colon is the bold label.
+function splitStep(step: string): { label: string | null; body: string } {
+  const i = step.indexOf(":");
+  if (i > 0 && i <= 40) {
+    return { label: step.slice(0, i).trim(), body: step.slice(i + 1).trim() };
+  }
+  return { label: null, body: step };
+}
 
 export default function MealDetailModal({
   meal,
@@ -47,6 +58,8 @@ export default function MealDetailModal({
   limited?: boolean; // true when the ingredients can't reach the target any closer
 }) {
   const showPie = !!split && !!onSplitChange;
+  const steps = meal.instructions ?? [];
+  const [tab, setTab] = useState<"ingredients" | "instructions">("ingredients");
 
   return (
     <div className={styles.overlay} onClick={onClose}>
@@ -72,14 +85,45 @@ export default function MealDetailModal({
               <span>C {Math.round(meal.totals.carbs)}g</span>
             </div>
 
-            <ul className={styles.list}>
-              {meal.items.map((item) => (
-                <li key={item.food} className={styles.item}>
-                  <span className={styles.food}>{item.food}</span>
-                  <span>{item.grams}g</span>
-                </li>
-              ))}
-            </ul>
+            <div className={styles.tabs}>
+              <button
+                className={`${styles.tab} ${tab === "ingredients" ? styles.tabActive : ""}`}
+                onClick={() => setTab("ingredients")}
+              >
+                Ingredients
+              </button>
+              <button
+                className={`${styles.tab} ${tab === "instructions" ? styles.tabActive : ""}`}
+                onClick={() => setTab("instructions")}
+              >
+                Instructions
+              </button>
+            </div>
+
+            {tab === "ingredients" ? (
+              <ul className={styles.list}>
+                {meal.items.map((item) => (
+                  <li key={item.food} className={styles.item}>
+                    <span className={styles.food}>{item.food}</span>
+                    <span>{item.grams}g</span>
+                  </li>
+                ))}
+              </ul>
+            ) : steps.length === 0 ? (
+              <p className={styles.note}>No instructions for this meal.</p>
+            ) : (
+              <ol className={styles.steps}>
+                {steps.map((step, i) => {
+                  const { label, body } = splitStep(step);
+                  return (
+                    <li key={i} className={styles.step}>
+                      {label && <strong>{label}: </strong>}
+                      {body}
+                    </li>
+                  );
+                })}
+              </ol>
+            )}
           </div>
 
           <div className={styles.imageBox}>
