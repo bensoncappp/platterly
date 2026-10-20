@@ -15,7 +15,7 @@ export default function Sidebar() {
 
   return (
     <nav className={styles.sidebar}>
-      <div className={styles.logo}>Prep</div>
+      <div className={styles.logo}>Platterly</div>
       <ul className={styles.list}>
         {NAV_ITEMS.map(({ href, label, icon: Icon }) => (
           <li key={href}>
