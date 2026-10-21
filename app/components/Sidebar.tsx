@@ -15,7 +15,10 @@ export default function Sidebar() {
 
   return (
     <nav className={styles.sidebar}>
-      <div className={styles.logo}>Platterly</div>
+      <div className={styles.brand}>
+        <div className={styles.logo}>Platterly</div>
+        <div className={styles.slogan}>Meal prep, made simple.</div>
+      </div>
       <ul className={styles.list}>
         {NAV_ITEMS.map(({ href, label, icon: Icon }) => (
           <li key={href}>

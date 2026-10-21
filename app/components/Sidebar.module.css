@@ -7,6 +7,18 @@
   flex-direction: column;
   gap: 44px;
 }
+/* logo + slogan stay together; the sidebar's gap only separates them from the nav list */
+.brand {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.slogan {
+  padding: 0 24px 0 32px;
+  font-size: 14px;
+  line-height: 1.3;
+  color: rgba(255, 255, 255, 0.85);
+}
 .logo {
   font-family: var(--font-logo), cursive;
   font-size: 44px;
